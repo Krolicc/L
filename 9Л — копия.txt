@@ -1,0 +1,128 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+int random_number_in_range(int lower, int upper)
+{
+    int num = (rand() % (upper - lower + 1)) + lower;
+
+    return num;
+}
+
+int cmp(const void *a, const void *b) {
+     return *(int*)a - *(int*)b;
+ }
+
+void rearranging_elements() {
+    long int array_size, min_side_range, extra_side_range, max_side_range, min_num_position, max_num_position, extra_num;
+    printf("Размер массива: ");
+    scanf("%ld", &array_size);
+
+    printf("Границы диапазона псевдослучайных чисел: \nВерхняя = ");
+    scanf("%ld", &max_side_range);
+
+    while(max_side_range < -900000000 ||  max_side_range > 900000000) {
+        printf("Диапазон вверха [-900000000;900000000]: ");
+        scanf("%ld", &max_side_range);
+    }
+
+    printf("Нижняя = ");
+    scanf("%ld", &min_side_range);
+
+    while(min_side_range < -900000000 ||  min_side_range > 900000000) {
+        printf("Диапазон низа [-900000000;900000000]: ");
+        scanf("%ld", &min_side_range);
+    }
+
+    if(min_side_range > max_side_range) {
+        printf("Вверхняя граница и нижняя поменены местами! \n");
+        extra_side_range = min_side_range;
+        min_side_range = max_side_range;
+        max_side_range = extra_side_range;
+    }
+
+    srand(time(0));
+
+    long int numbers_array[array_size], min_num = max_side_range, max_num = min_side_range;
+
+    for(int i=0; i<array_size; ++i) {
+        numbers_array[i] = random_number_in_range(min_side_range, max_side_range);
+        printf("%ld ", numbers_array[i]);
+    }
+
+    printf("\n");
+
+    for(int i=0; i<array_size; ++i) {
+        if(numbers_array[i] <= min_num)
+        {
+            min_num = numbers_array[i];
+            min_num_position = i;
+        }
+
+        if(numbers_array[i] >= max_num)
+        {
+            max_num = numbers_array[i];
+            max_num_position = i;
+        }
+    }
+
+    extra_num = max_num;
+    numbers_array[max_num_position] = min_num;
+    numbers_array[min_num_position] = extra_num;
+
+
+    for(int i=0; i<array_size; ++i) {
+        printf("%ld ", numbers_array[i]);
+    }
+}
+
+void new_array_creating() {
+    int arrayA_size = random_number_in_range(5, 15), arrayB_size = random_number_in_range(5, 15),
+        numbers_arrayA[arrayA_size], numbers_arrayB[arrayB_size], numbers_arrayC[arrayA_size];
+
+    for(int i=0; i<arrayA_size; ++i) {
+        numbers_arrayA[i] = random_number_in_range(-1000, 1000);
+        // printf("Ai = %d, i = %d \n", numbers_arrayA[i], i);
+        printf("%d ", numbers_arrayA[i]);
+    }
+
+    printf("\n");
+
+    for(int i=0; i<arrayB_size; ++i) {
+        numbers_arrayB[i] = random_number_in_range(-1000, 1000);
+        // printf("Bi = %d, i = %d \n", numbers_arrayB[i], i);
+        printf("%d ", numbers_arrayB[i]);
+    }
+
+    printf("\n");
+
+    qsort(numbers_arrayB, arrayB_size, sizeof(int), cmp);
+
+    for(int i=0; i<arrayA_size; ++i) {
+        int close_to_A_i_num = 2000, intermediate_calculation_difference = 2000;
+        for(int j=0; j<arrayB_size; ++j) {
+            if(abs(numbers_arrayB[j] - numbers_arrayA[i]) <= intermediate_calculation_difference) {
+                close_to_A_i_num = numbers_arrayB[j];
+                intermediate_calculation_difference = abs(numbers_arrayB[j] - numbers_arrayA[i]);
+            }
+        }
+
+        numbers_arrayC[i] = numbers_arrayA[i] + close_to_A_i_num;
+        printf("%d ", numbers_arrayC[i]);
+    }
+}
+
+int main()
+{
+    char program_part;
+    printf("Какую часть программу 1 или 2 запустить? \n");
+    scanf("%c", &program_part);
+    if (program_part == '1' || program_part == 'a')
+        rearranging_elements();
+    else if (program_part == '2' || program_part == 'b')
+        new_array_creating();
+    else
+        return 1;
+
+    return 0;
+}

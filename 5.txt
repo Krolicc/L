@@ -1,0 +1,109 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+long double exponentiation(long double base, int indicator) {
+    if(indicator == 0) return 1.0;
+
+    long double result = 1.0;
+
+    while(indicator > 0) {
+        result *= base;
+        --indicator;
+    }
+
+    return result;
+}
+
+int factorial(int base) {
+    if(base == 0) return 1.0;
+
+    int result=1, indicator=1;
+
+    while(indicator <= base) {
+        result *= indicator;
+        ++indicator;
+    }
+
+    return result;
+}
+
+long double section_factorial(int base, int start) {
+    if(base == 0) return 1.0;
+
+    int result=1, indicator=start;
+
+    while(indicator <= base) {
+        result *= indicator;
+        ++indicator;
+    }
+
+    return (long double)result;
+}
+
+int main()
+{
+    int i=0;
+    long double accuracy = 0, result, x=-1, extra_number;
+
+    while(!(accuracy >= 0.00000000001)) {
+        printf("Введите ε: ");
+        scanf("%Lf", &accuracy);
+    }
+
+    while(!(x>0 && x < 2000)) {
+        printf("Введите x: ");
+        scanf("%Lf", &x);
+    }
+
+
+
+    printf("Первый пример: %10.20lf", pow(exp(1),x));
+
+    printf("\nВторой пример: %10.20lf", -1+cos(x));
+
+    while(1) {
+        extra_number = exponentiation(3,3*i)*exponentiation(x,2*i);
+
+
+        for(int k=2; k <= i; k++) {
+            extra_number *= pow(k, 3);
+        }
+
+        for(int k=2; k <= 3*i; k++) {
+            extra_number /= k;
+        }
+
+        result += extra_number;
+        if(extra_number < accuracy || result > 20000000) {
+            if(result < 0 || result > 20000000)
+               printf("\nТретий пример: Ряд расходится");
+            else
+                printf("\nТретий пример: %10.20Lf", result-1);
+            break;
+        }
+
+        i++;
+    }
+
+    i = 1; result = 0; extra_number = 0;
+
+    while(1) {
+        extra_number = exponentiation(-1,i)*factorial(factorial(2*i-1))*exponentiation(x,2*i)/factorial(factorial(2*i));
+        if(extra_number <= -2000 || extra_number >= 2000 || extra_number == -INFINITY || extra_number == INFINITY || isnan(-extra_number) || isnan(extra_number)) {
+            printf("\nЧетвертый пример: %10.20Lf", result);
+            break;
+        }
+        result += extra_number;
+        if(extra_number < 0) extra_number *= -1;
+        // printf("\n%10.20Lf", extra_number);
+        if(extra_number < accuracy) {
+            printf("\nЧетвертый пример: %10.20Lf", result);
+            break;
+        }
+
+        i++;
+    }
+
+    return 0;
+}

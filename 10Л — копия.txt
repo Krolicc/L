@@ -1,0 +1,154 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
+
+char* string_comparison(char* cur_num, char* new_num, int cur_num_length, int new_num_length) {
+    if(cur_num_length == new_num_length) {
+        for(int i = strlen(cur_num) - cur_num_length; i < strlen(cur_num); i++) {
+            for(int j = strlen(new_num) - new_num_length; j < strlen(new_num); j++) {
+                if(cur_num[i] < new_num[j]) return new_num;
+                else if(cur_num[i] > new_num[j]) return cur_num;
+                else continue;
+            }
+        }
+    }
+    return cur_num;
+}
+
+char* transformation_from_decimal_to_otherBase(int base, int num, char *lang) {
+    char extra_result[1025];
+    int counter = 0;
+    while(num != 0) {
+        extra_result[counter] = lang[num % base];
+
+
+        num /= base;
+        counter++;
+    }
+
+    char *result = malloc (sizeof (char) * counter);
+
+    // char result[counter];
+    for(int i = counter-1; i >= 0; --i) {
+        result[counter-i-1] = extra_result[i];
+    }
+
+    return result;
+}
+
+bool correctness_base_range(int *base) {
+    if(*base < 2 || *base > 36) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int num_length_func(char *num) {
+    int length = 0, i = 0;
+
+    while(num[i] != '\0') {
+        if(num[i] == '0') length--;
+        else break;
+        i++;
+    }
+
+    length += strlen(num);
+
+    return length;
+}
+
+bool correctness_num(char *num, int *base, char *lang) {
+    int i = 0, j = 0;
+    bool belonging_to_dictionary;
+
+    while(num[i] != '\0') {
+        while(j < *base) {
+            if(num[i] == lang[j]) {
+                belonging_to_dictionary = true;
+                break;
+            }
+            belonging_to_dictionary = false;
+            j++;
+        }
+
+        if(!belonging_to_dictionary) return 1;
+        i++; j = 0;
+    }
+
+    return 0;
+}
+
+int exponentiation(int base, int indicator) {
+    int result=1;
+
+    if(indicator == 0) return 1;
+
+    while(indicator > 0) {
+        result *= base;
+        --indicator;
+    }
+
+    return result;
+}
+
+int main()
+{
+    int base_num_system, num_length, max_num_length, decimal_number = 0;
+
+    char num[1024], max_num[1024], lang[36] = "0123456789";
+
+    for (int i = 10; i < 36; i++)
+        lang[i] = i + 55;
+
+    printf("Введите основание в диапазоне [2..36] и список чисел; стоп-слово: Stop\n");
+    scanf("%d", &base_num_system);
+
+    while(correctness_base_range(&base_num_system)) {
+        printf("Неверный диапазон основания \n");
+        scanf("%d", &base_num_system);
+    }
+
+    printf("Введите список чисел, соответствующие основанию:\n");
+
+    scanf("%s", max_num);
+
+    while(correctness_num(max_num, &base_num_system, lang)) {
+        printf("Неверное число \n");
+        scanf("%s", max_num);
+    }
+
+    max_num_length = num_length_func(max_num), strcpy(num, max_num), num_length = max_num_length;
+
+    while(strcmp(num, "Stop") != 0) {
+        strcpy(max_num, string_comparison(max_num, num, max_num_length, num_length));
+        scanf("%s", num);
+        while(correctness_num(num, &base_num_system, lang)) {
+            printf("Неверное число \n");
+            scanf("%s", max_num);
+        }
+
+        int max_num_length = num_length_func(max_num);
+        int num_length = num_length_func(num);
+    }
+
+    char *brief_num = max_num;
+
+    for(int i = 0; i < strlen(max_num) - max_num_length; ++i) {
+        brief_num ++;
+    }
+
+    for(int i = 0; i < strlen(brief_num); ++i) {
+        decimal_number += (brief_num[i] - '0') * exponentiation(base_num_system, strlen(brief_num) - i - 1);
+    }
+
+    printf("Число в 10-ной системе: %d \n", decimal_number);
+    printf("Число в 9-ной системе: %s \n", transformation_from_decimal_to_otherBase(9, decimal_number, lang));
+    printf("Число в 18-ной системе: %s \n", transformation_from_decimal_to_otherBase(18, decimal_number, lang));
+    printf("Число в 27-ной системе: %s \n", transformation_from_decimal_to_otherBase(27, decimal_number, lang));
+    printf("Число в 36-ной системе: %s \n", transformation_from_decimal_to_otherBase(36, decimal_number, lang));
+
+    return 0;
+}

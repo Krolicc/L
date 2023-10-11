@@ -1,0 +1,108 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
+int exponentiation(int base, int indicator) {
+    int result=1;
+
+    if(indicator == 0) return 1;
+
+    while(indicator > 0) {
+        result *= base;
+        --indicator;
+    }
+
+    return result;
+}
+
+void add_to_file(char symbol, int decimal_number, int extra_decimal_symbol, char *lang, char *word, char max_symbol_in_word, FILE *fp_to_write, int i) {
+    for(int j=0; j<i; ++j) {
+        extra_decimal_symbol = word[j];
+        if(extra_decimal_symbol >= 97 && extra_decimal_symbol <= 122) {
+            symbol = extra_decimal_symbol - 32;
+            word[j] = symbol;
+        }
+
+        if(word[j] > max_symbol_in_word) max_symbol_in_word = word[j];
+    }
+
+    fprintf (fp_to_write, "%s, ", word);
+
+    for(int j=0; j<36; ++j) {
+        if(lang[j] == max_symbol_in_word) {
+            fprintf(fp_to_write, "%d", j+1);
+            for(int k = 0; k < strlen(word); ++k) {
+                decimal_number += (word[k] - '0') * exponentiation(j, strlen(word) - k - 1);
+            }
+
+            fprintf(fp_to_write, " %d\n", decimal_number);
+        }
+    }
+}
+
+int main (void)
+{
+
+    FILE *fp, *fp_to_write;
+    int decimal_symbol, i = 0, extra_decimal_symbol, decimal_number;
+    char symbol, word[1025] = "", lang[36] = "0123456789", max_symbol_in_word = '0', input_file_name[1024], output_file_name[1024];
+    bool file_isOpen=0;
+
+    for (int i = 10; i < 36; i++)
+        lang[i] = i + 55;
+
+    printf("Введите название входного файла: ");
+    scanf("%s", input_file_name);
+
+    printf("Введите название выходного файла: ");
+    scanf("%s", output_file_name);
+
+    while(!file_isOpen) {
+        fp = fopen (input_file_name,"r");
+
+        if (fp == NULL) {
+            printf("Введите КОРРЕКТНОЕ название входного файла: ");
+            scanf("%s", input_file_name);
+        } else{
+            file_isOpen = 1;
+        }
+    }
+
+    fp_to_write = fopen(output_file_name,"w");
+
+   while (1)
+   {
+      symbol = fgetc(fp);
+      decimal_symbol = symbol;
+
+      if (symbol == EOF)
+      {
+         if ( feof (fp) != 0) {
+            add_to_file(symbol, decimal_symbol, extra_decimal_symbol, lang, word, max_symbol_in_word, fp_to_write, i);
+            break;
+         } else
+            break;
+      }
+
+      if(decimal_symbol <= 32 && word[0] != '\0') {
+        add_to_file(symbol, decimal_symbol, extra_decimal_symbol, lang, word, max_symbol_in_word, fp_to_write, i);
+
+        for(int j=0; j<1025; ++j)
+          word[j] = '\0';
+        i = 0; max_symbol_in_word = '0';
+      } else if(decimal_symbol <= 32) {
+      } else {
+        word[i] = symbol;
+        i++;
+      }
+   }
+
+    if ( fclose (fp) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    if ( fclose (fp_to_write) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+     return 0;
+}

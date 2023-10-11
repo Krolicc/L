@@ -1,0 +1,112 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#include <math.h>
+
+void is_quadratic_equation () {
+    double epsilon, num_1, num_2, num_3, discriminant, x_1, x_2;
+
+    printf("Введите ε: ");
+    scanf("%lf", &epsilon);
+
+    printf("Введите первое вещественное число: ");
+    scanf("%lf", &num_1);
+
+    printf("Введите второе вещественное число: ");
+    scanf("%lf", &num_2);
+
+    printf("Введите третье вещественное число: ");
+    scanf("%lf", &num_3);
+
+    double numbers[3] = {num_1, num_2, num_3};
+
+    // printf("%lfx^2 + %lfx + %lf = 0 \n Решения:", numbers[0], numbers[1], numbers[2]);
+
+    for(int i=0; i<3; ++i) {
+        for(int j=0; j<3; ++j) {
+            for(int k=0; k<3; ++k) {
+                if(i==j || k==j || k==i || numbers[i] == 0) continue;
+
+                discriminant = numbers[j] * numbers[j] - 4 * numbers[i] * numbers[k];
+                // printf("\ndis=%lf", discriminant);
+
+                if(discriminant > 0+epsilon) {
+                    printf("\nПри %lf, %lf, %lf корни следующие: ", numbers[i], numbers[j], numbers[k]);
+                    x_1 = (-numbers[j] - sqrt(discriminant)) / (2 * numbers[i]);
+                    if(x_1 < epsilon * 0.001 && x_1 > -epsilon * 0.001)
+                        x_1 = 0;
+                    x_2 = (-numbers[j] + sqrt(discriminant)) / (2 * numbers[i]);
+                    if(x_2 < epsilon * 0.001 && x_2 > -epsilon * 0.001)
+                        x_2 = 0;
+                    printf("x1 = %lf, x2 = %lf", x_1, x_2);
+                } else if (discriminant <= 0+epsilon && discriminant >= 0-epsilon) {
+                    printf("\nПри %lf, %lf, %lf корень следующие: ", numbers[i], numbers[j], numbers[k]);
+                    x_1 = -numbers[j] / (2 * numbers[i]);
+                    printf("x1 = %lf", x_1);
+                }
+            }
+        }
+    }
+
+}
+
+void check_for_multiplicity() {
+    int num_1, num_2;
+
+    printf("Введите первое число: ");
+    scanf("%d", &num_1);
+
+    printf("Введите второе число: ");
+    scanf("%d", &num_2);
+
+    if(num_1 % num_2 == 0)
+        printf("Кратно");
+    else
+        printf("Не кратно");
+}
+
+void is_right_triangle() {
+    double epsilon, num_1, num_2, num_3, resault_1, resault_2, resault_3;
+
+    printf("Введите ε: ");
+    scanf("%lf", &epsilon);
+
+    printf("Введите первое вещественное число: ");
+    scanf("%lf", &num_1);
+
+    printf("Введите второе вещественное число: ");
+    scanf("%lf", &num_2);
+
+    printf("Введите третье вещественное число: ");
+    scanf("%lf", &num_3);
+
+
+    resault_1 = num_1*num_1 + num_2*num_2 - num_3*num_3;
+    resault_2 = num_3*num_3 + num_1*num_1 - num_2*num_2;
+    resault_3 = num_2*num_2 + num_3*num_3 - num_1*num_1;
+
+    if(resault_1 < epsilon && -epsilon < resault_1 || resault_2 < epsilon && -epsilon < resault_2 || resault_3 < epsilon && -epsilon < resault_3)
+        printf("Для сторон %lf, %lf, %lf: треугольник существует\n", num_1, num_2, num_3);
+
+}
+
+int main()
+{
+    char flag[3];
+
+    printf("Введите флаг: ");
+    scanf("%s", flag);
+
+    if (flag[0] == '-' || flag[0] == '/' ) {
+
+        if(flag[1] == 'q') {
+            is_quadratic_equation();
+        } else if(flag[1] == 'm') {
+            check_for_multiplicity();
+        } else if(flag[1] == 't') {
+            is_right_triangle();
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,236 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
+char* transformation_from_decimal_to_hexBase(int num) {
+    char extra_result[1025], lang[20] = "0123456789";
+    int counter = 0;
+
+    for (int i = 10; i < 16; i++) {
+        lang[i] = i + 55;
+    }
+
+
+    while(num != 0) {
+        extra_result[counter] = lang[num % 16];
+
+        num /= 16;
+        counter++;
+    }
+
+    char *result = malloc (sizeof (char) * counter);
+
+    for(int i = counter-1; i >= 0; --i) {
+        result[counter-i-1] = extra_result[i];
+    }
+
+    return result;
+}
+
+int delete_arabic_numbers(char *input_file, char *output_file) {
+
+    FILE *fp_input, *fp_output;
+    char symbol;
+
+    fp_input = fopen (input_file,"r");
+    fp_output = fopen (output_file,"w");
+
+    if (fp_input == NULL) {printf ("ошибка\n"); return -1;}
+    else printf ("выполнено\n");
+
+    if (fp_output == NULL) {printf ("ошибка\n"); return -1;}
+    else printf ("выполнено\n");
+
+    while (1)
+    {
+        symbol = fgetc(fp_input);
+
+        if (symbol == EOF)
+            if ( feof (fp_input) != 0)
+                break;
+            else
+                break;
+
+        if(strchr("0123456789", symbol) == NULL) {
+            fprintf(fp_output, "%c", symbol);
+        }
+    }
+
+    if ( fclose (fp_input) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    if ( fclose (fp_output) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+}
+
+int count_latin_symbols(char *input_file, char *output_file) {
+    FILE *fp_input, *fp_output;
+    char symbol, lang[60];
+    int counter = 0;
+
+    for (int i = 0; i < 26; i++) {
+        lang[i] = i + 65;
+        lang[i+26] = i + 97;
+    }
+
+    fp_input = fopen (input_file,"r");
+    fp_output = fopen (output_file,"w");
+
+    if (fp_input == NULL) {printf ("ошибка\n"); return -1;}
+    else printf ("выполнено\n");
+
+    if (fp_output == NULL) {printf ("ошибка\n"); return -1;}
+    else printf ("выполнено\n");
+
+    while (1)
+    {
+        symbol = fgetc(fp_input);
+
+        if (symbol == EOF) {
+            fprintf(fp_output, " || Кол-во символов латинских букв: %d", counter);
+            if ( feof (fp_input) != 0)
+                break;
+            else
+                break;
+        }
+
+        if((int)symbol == 10) {
+            fprintf(fp_output, " || Кол-во символов латинских букв: %d", counter);
+            counter = 0;
+        }
+
+        if(strchr(lang, symbol) != NULL) {
+            counter++;
+        }
+
+        fprintf(fp_output, "%c", symbol);
+    }
+
+    if ( fclose (fp_input) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    if ( fclose (fp_output) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+}
+
+int count_special_signs(char *input_file, char *output_file) {
+    FILE *fp_input, *fp_output;
+    char symbol, lang[70] = "0123456789";
+    int counter = 0;
+
+    for (int i = 10; i < 36; i++) {
+        lang[i] = i + 55;
+        lang[i+26] = i + 87;
+    }
+
+    fp_input = fopen (input_file,"r");
+    fp_output = fopen (output_file,"w");
+
+    if (fp_input == NULL) {printf ("ошибка\n"); return -1;}
+    else printf ("выполнено\n");
+
+    if (fp_output == NULL) {printf ("ошибка\n"); return -1;}
+    else printf ("выполнено\n");
+
+    while (1)
+    {
+        symbol = fgetc(fp_input);
+
+        if (symbol == EOF) {
+            fprintf(fp_output, " || Кол-во спец-символов: %d", counter);
+            if ( feof (fp_input) != 0)
+                break;
+            else
+                break;
+        }
+
+        if((int)symbol == 10) {
+            fprintf(fp_output, " || Кол-во спец-символов: %d", counter);
+            counter = 0;
+        }
+
+        if(strchr(lang, symbol) == NULL && (int)symbol != 10 && (int)symbol != 32 && (int)symbol != 9) {
+            counter++;
+        }
+
+        fprintf(fp_output, "%c", symbol);
+    }
+
+    if ( fclose (fp_input) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    if ( fclose (fp_output) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+}
+
+int rewrite_symbols_to_hex(char *input_file, char *output_file) {
+    FILE *fp_input, *fp_output;
+    char symbol, lang[10] = "0123456789";
+
+    fp_input = fopen (input_file,"r");
+    fp_output = fopen (output_file,"w");
+
+    if (fp_input == NULL) {printf ("ошибка\n"); return -1;}
+    else printf ("выполнено\n");
+
+    if (fp_output == NULL) {printf ("ошибка\n"); return -1;}
+    else printf ("выполнено\n");
+
+    while (1)
+    {
+        symbol = fgetc(fp_input);
+
+        if (symbol == EOF) {
+            if ( feof (fp_input) != 0)
+                break;
+            else
+                break;
+        }
+
+
+        if(strchr(lang, symbol) == NULL) {
+            fprintf(fp_output, "|%s|", transformation_from_decimal_to_hexBase((int)symbol));
+        } else
+            fprintf(fp_output, "%c", symbol);
+    }
+
+    if ( fclose (fp_input) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    if ( fclose (fp_output) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+}
+
+
+int main()
+{
+    char flag[3], input_name_file[1024], output_name_file[1027];
+
+    printf("Введите флаг: ");
+    scanf("%s", flag);
+
+    if (flag[0] == '-' || flag[0] == '/' && strchr("disa", flag[1]) != NULL || strchr("disa", flag[2]) != NULL ) {
+        printf("Введите имя входного файла: ");
+        scanf("%s", input_name_file);
+
+        if (flag[1] == 'n') {
+            printf("Введите имя выходного файла: ");
+            scanf("%s", output_name_file);
+        } else {
+            snprintf(output_name_file, sizeof (char) * 1030, "out_%s", input_name_file);
+        }
+
+        if(flag[1] == 'd' || flag[2] == 'd') {
+            delete_arabic_numbers(input_name_file, output_name_file);
+        } else if(flag[1] == 'i' || flag[2] == 'i') {
+            count_latin_symbols(input_name_file, output_name_file);
+        } else if(flag[1] == 's' || flag[2] == 's') {
+            count_special_signs(input_name_file, output_name_file);
+        } else if(flag[1] == 'a' || flag[2] == 'a') {
+            rewrite_symbols_to_hex(input_name_file, output_name_file);
+        }
+    }
+
+    return 0;
+}

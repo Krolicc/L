@@ -1,0 +1,256 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+char* transformation_from_decimal_to_otherBase(int base, int num) {
+    int extra_result[1025];
+    int counter = 0;
+    while(num != 0) {
+        extra_result[counter] = num % base;
+        num /= base;
+        counter++;
+    }
+
+    char *result = malloc (sizeof (char) * counter);
+
+    for(int i = counter-1; i >= 0; --i) {
+        result[counter-i-1] = extra_result[i] + '0';
+    }
+
+    return result;
+}
+
+int file_concatenation() {
+    bool is_end_file_1 = 0, is_end_file_2 = 0, file_1_isOpen = 0, file_2_isOpen = 0;
+    FILE *fp_1, *fp_2, *fp_3;
+    int i = 0;
+    char lexema_even, lexema_odd, word[1025] = "", input_file_name_1[1024], input_file_name_2[1024], output_file_name[1024];
+
+    printf("Введите название выходного файла: ");
+    scanf("%s", input_file_name_1);
+
+
+    while(!file_1_isOpen) {
+        fp_1 = fopen (input_file_name_1,"r");
+
+        if (fp_1 == NULL) {
+            printf("Введите КОРРЕКТНОЕ название входного файла 1: ");
+            scanf("%s", input_file_name_1);
+        } else{
+            file_1_isOpen = 1;
+        }
+    }
+
+    printf("Введите название выходного файла: ");
+    scanf("%s", input_file_name_2);
+
+
+    while(!file_2_isOpen) {
+        fp_2 = fopen (input_file_name_2,"r");
+
+        if (fp_2 == NULL) {
+            printf("Введите КОРРЕКТНОЕ название входного файла 1: ");
+            scanf("%s", input_file_name_2);
+        } else{
+            file_2_isOpen = 1;
+        }
+    }
+
+
+
+    printf("Введите название выходного файла: ");
+    scanf("%s", output_file_name);
+
+    fp_3 = fopen (output_file_name,"w");
+
+    while (1)
+    {
+        while (1 && !is_end_file_1) {
+
+            lexema_even = fgetc(fp_1);
+
+            if (lexema_even == EOF) {
+                fprintf(fp_3, "%s ", word);
+                if ( feof (fp_1) != 0) {
+                    is_end_file_1 = 1;
+                    break;
+                } else {
+                    is_end_file_1 = 1;
+                    break;
+                }
+            }
+
+            if((int)lexema_even <= 32 && word[0] != '\0') {
+                fprintf(fp_3, "%s ", word);
+                break;
+            } else if ((int)lexema_even <= 32) {
+            } else {
+                word[i] = lexema_even;
+                i++;
+            }
+
+        }
+
+        for(int j=0; j<1025; ++j) {
+            word[j] = '\0';
+        }
+
+        i = 0;
+
+        while (1 && !is_end_file_2) {
+
+            lexema_odd = fgetc(fp_2);
+
+            if (lexema_odd == EOF) {
+                fprintf(fp_3, "%s ", word);
+                if ( feof (fp_2) != 0) {
+                    is_end_file_2 = 1;
+                    break;
+                } else {
+                    is_end_file_2 = 1;
+                    break;
+                }
+            }
+
+
+            if((int)lexema_odd <= 32 && word[0] != '\0') {
+                fprintf(fp_3, "%s ", word);
+                break;
+            } else if ((int)lexema_odd <= 32) {
+            } else {
+                word[i] = lexema_odd;
+                i++;
+            }
+        }
+
+        for(int j=0; j<1025; ++j) {
+            word[j] = '\0';
+        }
+
+        i = 0;
+
+        if(is_end_file_2 && is_end_file_1) break;
+
+    }
+
+    if ( fclose (fp_1) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    if ( fclose (fp_2) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    if ( fclose (fp_3) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    return 1;
+}
+
+int file_transformation() {
+    FILE *fp_1, *fp_2;
+    bool file_1_isOpen = 0;
+    int i = 0, counter=1, transformation_isComplete=0;
+    char lexema, word[1025] = "", lang[26] = "", input_file_name_1[1024], output_file_name[1024];
+
+    for (int i = 0; i < 26; i++)
+        lang[i] = i + 65;
+
+    printf("Введите название выходного файла: ");
+    scanf("%s", input_file_name_1);
+
+
+    while(!file_1_isOpen) {
+        fp_1 = fopen (input_file_name_1,"r");
+
+        if (fp_1 == NULL) {
+            printf("Введите КОРРЕКТНОЕ название входного файла 1: ");
+            scanf("%s", input_file_name_1);
+        } else{
+            file_1_isOpen = 1;
+        }
+    }
+
+
+
+    printf("Введите название выходного файла: ");
+    scanf("%s", output_file_name);
+
+    fp_2 = fopen (output_file_name,"w");
+
+
+    while (1)
+    {
+        lexema = fgetc(fp_1);
+
+        if (lexema == EOF) {
+            fprintf(fp_2, "%s ", word);
+            if ( feof (fp_1) != 0)
+                break;
+            else
+                break;
+        }
+
+        if((int)lexema <= 32 && word[0] != '\0') {
+            if(counter % 10 == 0) {
+
+                for(int j=0; j<strlen(word); j++)
+                    fprintf(fp_2, "%s", transformation_from_decimal_to_otherBase(4, ((int)word[j])));
+
+                fprintf(fp_2, " ");
+            } else if(counter % 5 == 0) {
+
+                for(int j=0; j<strlen(word); j++)
+                    fprintf(fp_2, "%s", transformation_from_decimal_to_otherBase(8, ((int)word[j])));
+
+                fprintf(fp_2, " ");
+            } else
+                fprintf(fp_2, "%s ", word);
+
+            for(int j=0; j<1025; ++j) {
+                word[j] = '\0';
+            }
+
+            i = 0; counter++;
+
+        } else if ((int)lexema <= 32) {
+        } else {
+            if(counter % 10 == 0) {
+                if((int)lexema >= 65 && (int)lexema <= 90)
+                    lexema = (int)lexema + 32;
+            } else if (counter % 2 == 0) {
+                if((int)lexema >= 65 && (int)lexema <= 90)
+                    lexema = (int)lexema + 32;
+            }
+            word[i] = lexema;
+            i++;
+        }
+    }
+
+    if ( fclose (fp_1) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    if ( fclose (fp_2) == EOF) printf ("ошибка\n");
+    else printf ("выполнено\n");
+
+    return 1;
+}
+
+int main (void)
+{
+    char flag[1024] = "";
+
+    while(!((flag[0] == '/' || flag[0] == '-') && (flag[1] == 'r' || flag[1] == 'a'))) {
+        printf("%s\n", flag);
+        printf("Введите флаг: ");
+        scanf("%s", flag);
+    }
+
+
+    if((flag[0] == '/' || flag[0] == '-') && flag[1] == 'r') {
+        file_concatenation();
+    } else if ((flag[0] == '/' || flag[0] == '-') && flag[1] == 'a') {
+        file_transformation();
+    }
+
+    return 0;
+}

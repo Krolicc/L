@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+double exponentiation(double base, double indicator) {
+    if(indicator == 0) return 1.0;
+
+    double result = 1.0;
+
+    result *= pow(base, indicator);
+
+    return result;
+}
+
+int main()
+{
+    double accuracy, result;
+
+    printf("Введите ε: ");
+    scanf("%lf", &accuracy);
+
+    accuracy *= 0.001;
+
+    double step = 1 / accuracy;
+
+
+
+    for(double i=accuracy; i<=1; i += accuracy) {
+        result += log(1+i)/i;
+    }
+    printf("Первый пример: %10.20lf", result*(1/step));
+    result = 0;
+
+
+
+    for(double i=0; i<=1; i += accuracy) {
+        result += 1 / exponentiation(exp(1), (i*i)/2);
+    }
+    printf("\nВторой пример: %10.20lf", result*(1/step));
+    result = 0;
+
+
+
+    for(double i=0; i<1; i += accuracy) {
+        result += log(1/(1-i));
+    }
+    printf("\nТретий пример: %10.20lf", result*(1/step));
+    result = 0;
+
+
+
+    for(double i=0; i<=1; i += accuracy) {
+        result += exponentiation(i,i);
+    }
+    printf("\nЧетвертый пример: %10.20lf", result*(1/step));
+
+
+
+    return 0;
+}
