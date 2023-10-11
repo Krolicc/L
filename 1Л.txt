@@ -1,0 +1,158 @@
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+int multiply(int x, int res[], int res_size)
+{
+    int carry = 0;
+
+    for (int i = 0; i < res_size; i++) {
+        int prod = res[i] * x + carry;
+
+        res[i] = prod % 10;
+
+        carry = prod / 10;
+    }
+
+    while (carry) {
+        res[res_size] = carry % 10;
+        carry = carry / 10;
+        res_size++;
+    }
+    return res_size;
+}
+
+void factorial(int n)
+{
+    int res[500];
+
+    res[0] = 1;
+    int res_size = 1;
+
+    for (int x = 2; x <= n; x++)
+        res_size = multiply(x, res, res_size);
+
+    printf("Факториал числа: ");
+    for (int i = res_size - 1; i >= 0; i--)
+        printf("%d", res[i]);
+}
+
+int main()
+{
+    char flag[1024] = "";
+
+    printf("Введите флаг: ");
+    scanf("%s", flag);
+
+    while(strchr("-/", flag[0]) == NULL || strchr("hpseaf", flag[1]) == NULL) {
+        printf("Введите флаг: ");
+        scanf("%s", flag);
+    }
+
+    if(flag[1] == 'h') {
+        long int num;
+        printf("Введите число: ");
+        scanf("%ld", &num);
+
+        while(num < -400000 && num > 400000) {
+            printf("Введите число: ");
+            scanf("%ld", &num);
+        }
+
+        if(num > 100 || num == 0)
+            printf("У данного числа нет чисел кратных ему в диапазоне [1,100]");
+        else {
+            for(int i=1; i<=100; ++i) {
+                if(i % num == 0)
+                    printf("%d\n", i);
+            }
+        }
+    } else if(flag[1] == 'p') {
+        long int num;
+        printf("Введите число: ");
+        scanf("%ld", &num);
+
+        if(num == 0) {
+            printf("Число является простым");
+            return 0;
+        }
+
+        while(num < -400000 && num > 400000) {
+            printf("Введите число: ");
+            scanf("%ld", &num);
+        }
+
+        for(int i = 2; i < sqrt(num); ++i) {
+            if(num % i == 0) {
+                printf("Число является составным");
+                return 0;
+            }
+        }
+        printf("Число является простым");
+    } else if(flag[1] == 's') {
+        char num[1024];
+        int isNotNum=1;
+
+        while(isNotNum) {
+            printf("Введите число: ");
+            scanf("%s", num);
+
+            for(int j=0; j<=strlen(num); ++j) {
+                if(strchr("1234567890", num[j]) == NULL) {
+                    isNotNum=2;
+                    break;
+                }
+            }
+
+            isNotNum--;
+        }
+
+
+        for(int i=0; i<=strlen(num); ++i)
+            printf("%c ", num[i]);
+
+    } else if(flag[1] == 'e') {
+        int num;
+
+        printf("Введите число: ");
+        scanf("%d", &num);
+
+        while(num < 1 && num > 10) {
+            printf("Введите число: ");
+            scanf("%d", &num);
+        }
+
+        for(int i=1; i<=num; ++i)
+            printf("%10d ", i);
+
+        printf("\n");
+
+        for(int i=1; i<=10; ++i) {
+            for(int j=1; j<=num; ++j)
+                printf("%10d ", (int)pow(i,j));
+            printf("\n");
+        }
+
+    } else if(flag[1] == 'a') {
+        double num;
+        printf("Введите число: ");
+        scanf("%lf", &num);
+
+        printf("%.0lf", (1+num)/2*num);
+
+    } else if(flag[1] == 'f') {
+        int num;
+        printf("Введите число: ");
+        scanf("%d", &num);
+
+        while(num < 0 && num > 130) {
+            printf("Введите число: ");
+            scanf("%d", &num);
+        }
+
+        factorial(num);
+
+    }
+
+    return 0;
+}
