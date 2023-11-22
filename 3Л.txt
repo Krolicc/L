@@ -1,22 +1,29 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
+#include <Windows.h>
 
-void is_quadratic_equation () {
-    double epsilon, num_1, num_2, num_3, discriminant, x_1, x_2;
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_NUMBER_INPUT,
+    INCORRECT_FLAG_INPUT,
+    INCORRECT_NUMBER_ARGUMENTS_INPUT,
+    UNKNOWN_ERROR
+} ErrorCode;
 
-    printf("Введите ε: ");
-    scanf("%lf", &epsilon);
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректный ввод числа, попробуйте ещё раз",
+        "Некорректный ввод флага, попробуйте ещё раз",
+        "Некорректное кол-во аргументов, попробуйте ещё раз",
+        "Неизвестная ошибка, что-то пошло не так"
+};
 
-    printf("Введите первое вещественное число: ");
-    scanf("%lf", &num_1);
+void is_quadratic_equation (double epsilon, double num_1, double num_2, double num_3) {
 
-    printf("Введите второе вещественное число: ");
-    scanf("%lf", &num_2);
-
-    printf("Введите третье вещественное число: ");
-    scanf("%lf", &num_3);
+    double discriminant, x_1, x_2;
 
     double numbers[3] = {num_1, num_2, num_3};
 
@@ -50,14 +57,7 @@ void is_quadratic_equation () {
 
 }
 
-void check_for_multiplicity() {
-    int num_1, num_2;
-
-    printf("Введите первое число: ");
-    scanf("%d", &num_1);
-
-    printf("Введите второе число: ");
-    scanf("%d", &num_2);
+void check_for_multiplicity(int num_1, int num_2) {
 
     if(num_1 % num_2 == 0)
         printf("Кратно");
@@ -65,20 +65,8 @@ void check_for_multiplicity() {
         printf("Не кратно");
 }
 
-void is_right_triangle() {
-    double epsilon, num_1, num_2, num_3, resault_1, resault_2, resault_3;
-
-    printf("Введите ε: ");
-    scanf("%lf", &epsilon);
-
-    printf("Введите первое вещественное число: ");
-    scanf("%lf", &num_1);
-
-    printf("Введите второе вещественное число: ");
-    scanf("%lf", &num_2);
-
-    printf("Введите третье вещественное число: ");
-    scanf("%lf", &num_3);
+void is_right_triangle(double epsilon, double num_1, double num_2, double num_3) {
+    double resault_1, resault_2, resault_3;
 
 
     resault_1 = num_1*num_1 + num_2*num_2 - num_3*num_3;
@@ -90,23 +78,79 @@ void is_right_triangle() {
 
 }
 
-int main()
-{
-    char flag[3];
+int is_check_correct_number_arguments(int argc, int correct_number_arguments) {
+    if (argc != correct_number_arguments) {
+        printf("%s\n", errorMessages[INCORRECT_NUMBER_ARGUMENTS_INPUT]);
+        return INCORRECT_NUMBER_ARGUMENTS_INPUT;
+    }
+}
 
-    printf("Введите флаг: ");
-    scanf("%s", flag);
+int is_check_correct_float_number(char *str) {
+    int len;
+    float ignore;
 
-    if (flag[0] == '-' || flag[0] == '/' ) {
+    int ret = sscanf(str, "%f %n", &ignore, &len);
 
-        if(flag[1] == 'q') {
-            is_quadratic_equation();
-        } else if(flag[1] == 'm') {
-            check_for_multiplicity();
-        } else if(flag[1] == 't') {
-            is_right_triangle();
-        }
+    if(!(ret==1 && !str[len])) return SUCCESS;
+    else return INCORRECT_NUMBER_INPUT;
+}
+
+int is_num_func(int number, int length) {
+    int count = 0, answer;
+    while(number != 0) {
+        count++;
+        number /= 10;
     }
 
-    return 0;
+    answer = (count != length) ? SUCCESS : INCORRECT_NUMBER_ARGUMENTS_INPUT;
+
+    return answer;
+}
+
+int main(int argc, char *argv[])
+{
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
+    if(strchr("-/", argv[1][0]) != NULL && argv[1][1] == 'q') {
+
+        is_check_correct_number_arguments(argc, 6);
+
+        if(!(is_check_correct_float_number(argv[2]) && is_check_correct_float_number(argv[3]) &&
+                is_check_correct_float_number(argv[4]) && is_check_correct_float_number(argv[5]))) {
+            printf("%s\n", errorMessages[INCORRECT_NUMBER_INPUT]);
+            return INCORRECT_NUMBER_INPUT;
+        }
+
+        is_quadratic_equation(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
+
+    } else if(strchr("-/", argv[1][0]) != NULL && argv[1][1] == 'm') {
+
+        is_check_correct_number_arguments(argc, 4);
+
+        if(!(is_num_func(atoi(argv[2]), strlen(argv[2])) && is_num_func(atoi(argv[3]), strlen(argv[3])))) {
+            printf("%s\n", errorMessages[INCORRECT_NUMBER_INPUT]);
+            return INCORRECT_NUMBER_INPUT;
+        }
+
+        check_for_multiplicity(atoi(argv[2]), atoi(argv[3]));
+
+    } else if(strchr("-/", argv[1][0]) != NULL && argv[1][1] == 't') {
+
+        is_check_correct_number_arguments(argc, 6);
+
+        if(!(is_check_correct_float_number(argv[2]) && is_check_correct_float_number(argv[3]) &&
+             is_check_correct_float_number(argv[4]) && is_check_correct_float_number(argv[5]))) {
+            printf("%s\n", errorMessages[INCORRECT_NUMBER_INPUT]);
+            return INCORRECT_NUMBER_INPUT;
+        }
+
+        is_right_triangle(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
+
+    } else {
+        printf("%s\n", errorMessages[INCORRECT_FLAG_INPUT]);
+        return INCORRECT_FLAG_INPUT;
+    }
+
+    return SUCCESS;
 }
