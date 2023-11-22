@@ -1,6 +1,26 @@
+#include <Windows.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
 #include <string.h>
 #include <math.h>
+
+
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_NUMBER_INPUT,
+    INCORRECT_FLAG_INPUT,
+    INCORRECT_NUMBER_ARGUMENTS_INPUT,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректный ввод числа, попробуйте ещё раз",
+        "Некорректный ввод флага, попробуйте ещё раз",
+        "Некорректное кол-во аргументов, попробуйте ещё раз",
+        "Неизвестная ошибка, что-то пошло не так"
+};
 
 int multiply(int x, int res[], int res_size)
 {
@@ -37,26 +57,49 @@ void factorial(int n)
         printf("%d", res[i]);
 }
 
-int main()
-{
-    char flag[1024] = "";
-
-    printf("Введите флаг: ");
-    scanf("%s", flag);
-
-    while(strchr("-/", flag[0]) == NULL || strchr("hpseaf", flag[1]) == NULL) {
-        printf("Введите флаг: ");
-        scanf("%s", flag);
+int is_num_func(int number, int length) {
+    int count = 0, answer;
+    while(number != 0) {
+        count++;
+        number /= 10;
     }
 
-    if(flag[1] == 'h') {
-        long int num;
-        printf("Введите число: ");
-        scanf("%ld", &num);
+    answer = (count != length) ? 0 : 1;
 
-        while(num < -400000 && num > 400000) {
-            printf("Введите число: ");
-            scanf("%ld", &num);
+    return answer;
+
+}
+
+int main(int argc, char *argv[])
+{
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
+    if (argc != 3) {
+        printf("%s\n", errorMessages[INCORRECT_NUMBER_ARGUMENTS_INPUT]);
+        return INCORRECT_NUMBER_ARGUMENTS_INPUT;
+    }
+
+    int is_num = is_num_func(atoi(argv[1]), strlen(argv[1]));
+
+    if(!is_num) {
+        printf("%s\n", errorMessages[INCORRECT_NUMBER_INPUT]);
+        return INCORRECT_NUMBER_INPUT;
+    }
+
+
+    long int num = atoll(argv[1]);
+
+    if(strchr("-/", argv[2][0]) == NULL || strchr("hpseaf", argv[2][1]) == NULL) {
+        printf("%s\n", errorMessages[INCORRECT_FLAG_INPUT]);
+        return INCORRECT_FLAG_INPUT;
+    }
+
+    if(argv[2][1] == 'h') {
+
+        if(num < -400000 && num > 400000) {
+            printf("%s\n", errorMessages[INCORRECT_NUMBER_INPUT]);
+            return INCORRECT_NUMBER_INPUT;
         }
 
         if(num > 100 || num == 0)
@@ -67,92 +110,68 @@ int main()
                     printf("%d\n", i);
             }
         }
-    } else if(flag[1] == 'p') {
-        long int num;
-        printf("Введите число: ");
-        scanf("%ld", &num);
+    } else if(argv[2][1] == 'p') {
 
         if(num == 0) {
             printf("Число является простым");
-            return 0;
+            return SUCCESS;
         }
 
-        while(num < -400000 && num > 400000) {
-            printf("Введите число: ");
-            scanf("%ld", &num);
+        if(num < -400000 && num > 400000) {
+            printf("%s\n", errorMessages[INCORRECT_NUMBER_INPUT]);
+            return INCORRECT_NUMBER_INPUT;
         }
 
         for(int i = 2; i < sqrt(num); ++i) {
             if(num % i == 0) {
                 printf("Число является составным");
-                return 0;
+                return SUCCESS;
             }
         }
         printf("Число является простым");
-    } else if(flag[1] == 's') {
-        char num[1024];
-        int isNotNum=1;
+    } else if(argv[2][1] == 's') {
 
-        while(isNotNum) {
-            printf("Введите число: ");
-            scanf("%s", num);
-
-            for(int j=0; j<=strlen(num); ++j) {
-                if(strchr("1234567890", num[j]) == NULL) {
-                    isNotNum=2;
-                    break;
-                }
+        for(int j=0; j<=strlen(argv[1]); ++j) {
+            if(strchr("1234567890", argv[1][j]) == NULL) {
+                printf("%s\n", errorMessages[INCORRECT_NUMBER_INPUT]);
+                return INCORRECT_NUMBER_INPUT;
             }
-
-            isNotNum--;
         }
 
+        for(int i=0; i<=strlen(argv[1]); ++i)
+            printf("%c ", argv[1][i]);
 
-        for(int i=0; i<=strlen(num); ++i)
-            printf("%c ", num[i]);
+    } else if(argv[2][1] == 'e') {
 
-    } else if(flag[1] == 'e') {
-        int num;
-
-        printf("Введите число: ");
-        scanf("%d", &num);
-
-        while(num < 1 && num > 10) {
-            printf("Введите число: ");
-            scanf("%d", &num);
+        if(num < 1 && num > 10) {
+            printf("%s\n", errorMessages[INCORRECT_NUMBER_INPUT]);
+            return INCORRECT_NUMBER_INPUT;
         }
 
         for(int i=1; i<=num; ++i)
-            printf("%10d ", i);
+            printf("%11d ", i);
 
         printf("\n");
 
         for(int i=1; i<=10; ++i) {
             for(int j=1; j<=num; ++j)
-                printf("%10d ", (int)pow(i,j));
+                printf("%11.0lf ", pow(i,j));
             printf("\n");
         }
 
-    } else if(flag[1] == 'a') {
-        double num;
-        printf("Введите число: ");
-        scanf("%lf", &num);
+    } else if(argv[2][1] == 'a') {
+        long double double_number = num * 1.0;
+        printf("%.0lf", (1+double_number)/2*double_number);
 
-        printf("%.0lf", (1+num)/2*num);
-
-    } else if(flag[1] == 'f') {
-        int num;
-        printf("Введите число: ");
-        scanf("%d", &num);
-
-        while(num < 0 && num > 130) {
-            printf("Введите число: ");
-            scanf("%d", &num);
+    } else if(argv[2][1] == 'f') {
+        if(num < 0 && num > 130) {
+            printf("%s\n", errorMessages[INCORRECT_NUMBER_INPUT]);
+            return INCORRECT_NUMBER_INPUT;
         }
 
         factorial(num);
 
     }
 
-    return 0;
+    return SUCCESS;
 }
