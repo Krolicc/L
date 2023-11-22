@@ -1,10 +1,35 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
+#include <Windows.h>
+
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_NUMBER_INPUT,
+    INCORRECT_FLAG_INPUT,
+    INCORRECT_NUMBER_ARGUMENTS_INPUT,
+    FILE_OPENING_ERROR,
+    FILE_READING_ERROR,
+    FILE_WRITING_ERROR,
+    FILE_CLOSING_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректный ввод числа, попробуйте ещё раз",
+        "Некорректный ввод флага, попробуйте ещё раз",
+        "Некорректное кол-во аргументов, попробуйте ещё раз",
+        "Ошибка открытия файла",
+        "Ошибка чтения файла",
+        "Ошибка записи файла",
+        "Ошибка закрытия файла",
+        "Неизвестная ошибка, что-то пошло не так"
+};
+
 
 int exponentiation(int base, int indicator) {
-    int result=1;
+    int result = 1;
 
     if(indicator == 0) return 1;
 
@@ -16,7 +41,9 @@ int exponentiation(int base, int indicator) {
     return result;
 }
 
-void add_to_file(char symbol, int decimal_number, int extra_decimal_symbol, char *lang, char *word, char max_symbol_in_word, FILE *fp_to_write, int i) {
+int add_to_file(char symbol, char *lang, char *word, char max_symbol_in_word, FILE *fp_to_write, int i) {
+    int extra_decimal_symbol, decimal_number = 0;
+
     for(int j=0; j<i; ++j) {
         extra_decimal_symbol = word[j];
         if(extra_decimal_symbol >= 97 && extra_decimal_symbol <= 122) {
@@ -27,82 +54,104 @@ void add_to_file(char symbol, int decimal_number, int extra_decimal_symbol, char
         if(word[j] > max_symbol_in_word) max_symbol_in_word = word[j];
     }
 
-    fprintf (fp_to_write, "%s, ", word);
+    if (fprintf (fp_to_write, "%s, ", word) < 0) return FILE_WRITING_ERROR;
 
     for(int j=0; j<36; ++j) {
         if(lang[j] == max_symbol_in_word) {
             fprintf(fp_to_write, "%d", j+1);
             for(int k = 0; k < strlen(word); ++k) {
-                decimal_number += (word[k] - '0') * exponentiation(j, strlen(word) - k - 1);
+                decimal_number += (word[k] - '0') * exponentiation(j+1, strlen(word) - k - 1);
             }
 
             fprintf(fp_to_write, " %d\n", decimal_number);
         }
     }
+
+    return SUCCESS;
 }
 
-int main (void)
+int main (int argc, char *argv[])
 {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
 
     FILE *fp, *fp_to_write;
-    int decimal_symbol, i = 0, extra_decimal_symbol, decimal_number;
-    char symbol, word[1025] = "", lang[36] = "0123456789", max_symbol_in_word = '0', input_file_name[1024], output_file_name[1024];
-    bool file_isOpen=0;
+    fp = fopen (argv[1],"r");
+
+    if (fp == NULL) {
+        printf("%s", errorMessages[FILE_OPENING_ERROR]);
+        return FILE_OPENING_ERROR;
+    }
+
+    fp_to_write = fopen(argv[2],"w");
+
+    if (fp_to_write == NULL) {
+        printf("%s", errorMessages[FILE_OPENING_ERROR]);
+        if (fclose (fp) == EOF)
+            return FILE_CLOSING_ERROR;
+        return FILE_OPENING_ERROR;
+    }
+
+    int decimal_symbol, i = 0;
+    char symbol, word[1025] = "", lang[36] = "0123456789", max_symbol_in_word = '0';
 
     for (int i = 10; i < 36; i++)
         lang[i] = i + 55;
 
-    printf("Введите название входного файла: ");
-    scanf("%s", input_file_name);
+    while (1)
+    {
+        symbol = fgetc(fp);
 
-    printf("Введите название выходного файла: ");
-    scanf("%s", output_file_name);
+        if (symbol == EOF) {
+            if ( feof (fp) != 0) {
+                if (add_to_file(symbol, lang, word, max_symbol_in_word, fp_to_write, i) == FILE_WRITING_ERROR) {
+                    printf("%s", errorMessages[FILE_WRITING_ERROR]);
+                    if (fclose(fp) == EOF || fclose(fp_to_write) == EOF) {
+                        printf("%s", errorMessages[FILE_CLOSING_ERROR]);
+                        return FILE_CLOSING_ERROR;
+                    }
+                    return FILE_WRITING_ERROR;
+                }
+            } else {
+                printf("%s", errorMessages[FILE_READING_ERROR]);
+                if (fclose(fp) == EOF || fclose(fp_to_write) == EOF) {
+                    printf("%s", errorMessages[FILE_CLOSING_ERROR]);
+                    return FILE_CLOSING_ERROR;
+                }
+                return FILE_READING_ERROR;
+            }
+            break;
+        }
 
-    while(!file_isOpen) {
-        fp = fopen (input_file_name,"r");
+        decimal_symbol = symbol;
 
-        if (fp == NULL) {
-            printf("Введите КОРРЕКТНОЕ название входного файла: ");
-            scanf("%s", input_file_name);
-        } else{
-            file_isOpen = 1;
+        if(decimal_symbol <= 32 && word[0] != '\0') {
+            if (add_to_file(symbol, lang, word, max_symbol_in_word, fp_to_write, i) == FILE_WRITING_ERROR) {
+                if (add_to_file(symbol, lang, word, max_symbol_in_word, fp_to_write, i) == FILE_WRITING_ERROR) {
+                    printf("%s", errorMessages[FILE_WRITING_ERROR]);
+                    if ( fclose (fp) == EOF || fclose (fp_to_write) == EOF) {
+                        printf ("%s", errorMessages[FILE_CLOSING_ERROR]);
+                        return FILE_CLOSING_ERROR;
+                    }
+                    return FILE_WRITING_ERROR;
+                }
+            }
+
+            for(int j=0; j<1025; ++j)
+                word[j] = '\0';
+
+            i = 0; max_symbol_in_word = '0';
+        } else if(decimal_symbol <= 32) {
+        } else {
+            word[i] = symbol;
+            i++;
         }
     }
 
-    fp_to_write = fopen(output_file_name,"w");
+    if ( fclose (fp) == EOF || fclose (fp_to_write) == EOF) {
+        printf ("%s", errorMessages[FILE_CLOSING_ERROR]);
+        return FILE_CLOSING_ERROR;
+    }
 
-   while (1)
-   {
-      symbol = fgetc(fp);
-      decimal_symbol = symbol;
-
-      if (symbol == EOF)
-      {
-         if ( feof (fp) != 0) {
-            add_to_file(symbol, decimal_symbol, extra_decimal_symbol, lang, word, max_symbol_in_word, fp_to_write, i);
-            break;
-         } else
-            break;
-      }
-
-      if(decimal_symbol <= 32 && word[0] != '\0') {
-        add_to_file(symbol, decimal_symbol, extra_decimal_symbol, lang, word, max_symbol_in_word, fp_to_write, i);
-
-        for(int j=0; j<1025; ++j)
-          word[j] = '\0';
-        i = 0; max_symbol_in_word = '0';
-      } else if(decimal_symbol <= 32) {
-      } else {
-        word[i] = symbol;
-        i++;
-      }
-   }
-
-    if ( fclose (fp) == EOF) printf ("ошибка\n");
-    else printf ("выполнено\n");
-
-    if ( fclose (fp_to_write) == EOF) printf ("ошибка\n");
-    else printf ("выполнено\n");
-
-     return 0;
+    return SUCCESS;
 }
