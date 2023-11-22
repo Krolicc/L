@@ -1,68 +1,74 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h> 
 #include <string.h>
-#include <stdbool.h>
+#include <Windows.h>
+
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_NUMBER_INPUT,
+    INCORRECT_FLAG_INPUT,
+    INCORRECT_NUMBER_ARGUMENTS_INPUT,
+    FILE_OPENING_ERROR,
+    FILE_READING_ERROR,
+    FILE_WRITING_ERROR,
+    FILE_CLOSING_ERROR,
+    MEMORY_ALLOCATION_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректный ввод числа, попробуйте ещё раз",
+        "Некорректный ввод флага, попробуйте ещё раз",
+        "Некорректное кол-во аргументов, попробуйте ещё раз",
+        "Ошибка открытия файла",
+        "Ошибка чтения файла",
+        "Ошибка записи файла",
+        "Ошибка закрытия файла",
+        "Ошибка выделения памяти",
+        "Неизвестная ошибка, что-то пошло не так"
+};
 
 char* transformation_from_decimal_to_otherBase(int base, int num) {
-    int extra_result[1025];
-    int counter = 0;
+    int extra_result[1025], counter = 0;
+
     while(num != 0) {
         extra_result[counter] = num % base;
         num /= base;
         counter++;
     }
 
-    char *result = malloc (sizeof (char) * counter);
+    char *result = (char*)malloc(sizeof (char) * counter);
 
-    for(int i = counter-1; i >= 0; --i) {
-        result[counter-i-1] = extra_result[i] + '0';
+    if(result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
     }
+
+    for(int i = counter-1; i >= 0; --i)
+        result[counter-i-1] = extra_result[i] + '0';
 
     return result;
 }
 
-int file_concatenation() {
-    bool is_end_file_1 = 0, is_end_file_2 = 0, file_1_isOpen = 0, file_2_isOpen = 0;
+int file_concatenation(char *input_file_name_1, char *input_file_name_2, char *output_file_name) {
     FILE *fp_1, *fp_2, *fp_3;
-    int i = 0;
-    char lexema_even, lexema_odd, word[1025] = "", input_file_name_1[1024], input_file_name_2[1024], output_file_name[1024];
+    int i = 0, is_end_file_1 = 0, is_end_file_2 = 0;
+    char lexema_even, lexema_odd, word[1025] = "";
 
-    printf("Введите название выходного файла: ");
-    scanf("%s", input_file_name_1);
-
-
-    while(!file_1_isOpen) {
-        fp_1 = fopen (input_file_name_1,"r");
-
-        if (fp_1 == NULL) {
-            printf("Введите КОРРЕКТНОЕ название входного файла 1: ");
-            scanf("%s", input_file_name_1);
-        } else{
-            file_1_isOpen = 1;
-        }
+    if((fp_1 = fopen (input_file_name_1,"r")) == NULL) return FILE_OPENING_ERROR;
+    if((fp_2 = fopen (input_file_name_2,"r")) == NULL) {
+        if (fclose (fp_1) == EOF)
+            return FILE_CLOSING_ERROR;
+        return FILE_OPENING_ERROR;
     }
-
-    printf("Введите название выходного файла: ");
-    scanf("%s", input_file_name_2);
-
-
-    while(!file_2_isOpen) {
-        fp_2 = fopen (input_file_name_2,"r");
-
-        if (fp_2 == NULL) {
-            printf("Введите КОРРЕКТНОЕ название входного файла 1: ");
-            scanf("%s", input_file_name_2);
-        } else{
-            file_2_isOpen = 1;
-        }
+    if((fp_3 = fopen (output_file_name,"w")) == NULL) {
+        if (fclose (fp_1) == EOF)
+            return FILE_CLOSING_ERROR;
+        if (fclose (fp_2) == EOF)
+            return FILE_CLOSING_ERROR;
+        return FILE_OPENING_ERROR;
     }
-
-
-
-    printf("Введите название выходного файла: ");
-    scanf("%s", output_file_name);
-
-    fp_3 = fopen (output_file_name,"w");
 
     while (1)
     {
@@ -76,13 +82,18 @@ int file_concatenation() {
                     is_end_file_1 = 1;
                     break;
                 } else {
-                    is_end_file_1 = 1;
-                    break;
+                    if (fclose (fp_1) == EOF || fclose (fp_2) == EOF || fclose (fp_3) == EOF)
+                        return FILE_CLOSING_ERROR;
+                    return FILE_READING_ERROR;
                 }
             }
 
             if((int)lexema_even <= 32 && word[0] != '\0') {
-                fprintf(fp_3, "%s ", word);
+                if (fprintf(fp_3, "%s ", word) < 0) {
+                    if (fclose (fp_1) == EOF || fclose (fp_2) == EOF || fclose (fp_3) == EOF)
+                        return FILE_CLOSING_ERROR;
+                    return FILE_WRITING_ERROR;
+                }
                 break;
             } else if ((int)lexema_even <= 32) {
             } else {
@@ -92,9 +103,8 @@ int file_concatenation() {
 
         }
 
-        for(int j=0; j<1025; ++j) {
+        for(int j=0; j<1025; ++j)
             word[j] = '\0';
-        }
 
         i = 0;
 
@@ -103,19 +113,28 @@ int file_concatenation() {
             lexema_odd = fgetc(fp_2);
 
             if (lexema_odd == EOF) {
-                fprintf(fp_3, "%s ", word);
+                if (fprintf(fp_3, "%s ", word) < 0) {
+                    if (fclose (fp_1) == EOF || fclose (fp_2) == EOF || fclose (fp_3) == EOF)
+                        return FILE_CLOSING_ERROR;
+                    return FILE_WRITING_ERROR;
+                }
                 if ( feof (fp_2) != 0) {
                     is_end_file_2 = 1;
                     break;
                 } else {
-                    is_end_file_2 = 1;
-                    break;
+                    if (fclose (fp_1) == EOF || fclose (fp_2) == EOF || fclose (fp_3) == EOF)
+                        return FILE_CLOSING_ERROR;
+                    return FILE_READING_ERROR;
                 }
             }
 
 
             if((int)lexema_odd <= 32 && word[0] != '\0') {
-                fprintf(fp_3, "%s ", word);
+                if (fprintf(fp_3, "%s ", word) < 0) {
+                    if (fclose (fp_1) == EOF || fclose (fp_2) == EOF || fclose (fp_3) == EOF)
+                        return FILE_CLOSING_ERROR;
+                    return FILE_WRITING_ERROR;
+                }
                 break;
             } else if ((int)lexema_odd <= 32) {
             } else {
@@ -124,9 +143,8 @@ int file_concatenation() {
             }
         }
 
-        for(int j=0; j<1025; ++j) {
+        for(int j=0; j<1025; ++j)
             word[j] = '\0';
-        }
 
         i = 0;
 
@@ -134,49 +152,26 @@ int file_concatenation() {
 
     }
 
-    if ( fclose (fp_1) == EOF) printf ("ошибка\n");
-    else printf ("выполнено\n");
+    if (fclose (fp_1) == EOF || fclose (fp_2) == EOF || fclose (fp_3) == EOF)
+        return FILE_CLOSING_ERROR;
 
-    if ( fclose (fp_2) == EOF) printf ("ошибка\n");
-    else printf ("выполнено\n");
-
-    if ( fclose (fp_3) == EOF) printf ("ошибка\n");
-    else printf ("выполнено\n");
-
-    return 1;
+    return SUCCESS;
 }
 
-int file_transformation() {
+int file_transformation(char *input_file_name_1, char *output_file_name) {
     FILE *fp_1, *fp_2;
-    bool file_1_isOpen = 0;
-    int i = 0, counter=1, transformation_isComplete=0;
-    char lexema, word[1025] = "", lang[26] = "", input_file_name_1[1024], output_file_name[1024];
+    int i, counter=1, transformation_isComplete=0;
+    char lexema, word[1025] = "", lang[26] = "";
 
-    for (int i = 0; i < 26; i++)
+    for (i = 0; i < 26; i++)
         lang[i] = i + 65;
 
-    printf("Введите название выходного файла: ");
-    scanf("%s", input_file_name_1);
-
-
-    while(!file_1_isOpen) {
-        fp_1 = fopen (input_file_name_1,"r");
-
-        if (fp_1 == NULL) {
-            printf("Введите КОРРЕКТНОЕ название входного файла 1: ");
-            scanf("%s", input_file_name_1);
-        } else{
-            file_1_isOpen = 1;
-        }
+    if((fp_1 = fopen (input_file_name_1,"r")) == NULL) return FILE_OPENING_ERROR;
+    if((fp_2 = fopen (output_file_name,"w")) == NULL) {
+        if (fclose (fp_1) == EOF)
+            return FILE_CLOSING_ERROR;
+        return FILE_OPENING_ERROR;
     }
-
-
-
-    printf("Введите название выходного файла: ");
-    scanf("%s", output_file_name);
-
-    fp_2 = fopen (output_file_name,"w");
-
 
     while (1)
     {
@@ -184,40 +179,56 @@ int file_transformation() {
 
         if (lexema == EOF) {
             fprintf(fp_2, "%s ", word);
-            if ( feof (fp_1) != 0)
-                break;
-            else
-                break;
+            if ( feof (fp_1) != 0) break;
+            else {
+                if (fclose (fp_1) == EOF)
+                    return FILE_CLOSING_ERROR;
+                if (fclose (fp_2) == EOF)
+                    return FILE_CLOSING_ERROR;
+                return FILE_READING_ERROR;
+            }
         }
 
         if((int)lexema <= 32 && word[0] != '\0') {
             if(counter % 10 == 0) {
-
-                for(int j=0; j<strlen(word); j++)
-                    fprintf(fp_2, "%s", transformation_from_decimal_to_otherBase(4, ((int)word[j])));
+                for (int j = 0; j < strlen(word); j++)
+                    if (fprintf(fp_2, "%s", transformation_from_decimal_to_otherBase(4, ((int) word[j]))) < 0) {
+                        if (fclose(fp_1) == EOF)
+                            return FILE_CLOSING_ERROR;
+                        if (fclose(fp_2) == EOF)
+                            return FILE_CLOSING_ERROR;
+                        return FILE_WRITING_ERROR;
+                    }
 
                 fprintf(fp_2, " ");
             } else if(counter % 5 == 0) {
-
-                for(int j=0; j<strlen(word); j++)
-                    fprintf(fp_2, "%s", transformation_from_decimal_to_otherBase(8, ((int)word[j])));
+                for (int j = 0; j < strlen(word); j++)
+                    if (fprintf(fp_2, "%s", transformation_from_decimal_to_otherBase(8, ((int) word[j]))) < 0) {
+                        if (fclose (fp_1) == EOF)
+                            return FILE_CLOSING_ERROR;
+                        if (fclose (fp_2) == EOF)
+                            return FILE_CLOSING_ERROR;
+                        return FILE_WRITING_ERROR;
+                    }
 
                 fprintf(fp_2, " ");
-            } else
-                fprintf(fp_2, "%s ", word);
-
-            for(int j=0; j<1025; ++j) {
-                word[j] = '\0';
+            } else if( fprintf(fp_2, "%s ", word) < 0) {
+                if (fclose (fp_1) == EOF)
+                    return FILE_CLOSING_ERROR;
+                if (fclose (fp_2) == EOF)
+                    return FILE_CLOSING_ERROR;
+                return FILE_WRITING_ERROR;
             }
+
+
+            for(int j=0; j < 1025; ++j)
+                word[j] = '\0';
 
             i = 0; counter++;
 
         } else if ((int)lexema <= 32) {
         } else {
-            if(counter % 10 == 0) {
-                if((int)lexema >= 65 && (int)lexema <= 90)
-                    lexema = (int)lexema + 32;
-            } else if (counter % 2 == 0) {
+            if(counter % 10 == 0 || counter % 2 == 0) {
                 if((int)lexema >= 65 && (int)lexema <= 90)
                     lexema = (int)lexema + 32;
             }
@@ -226,31 +237,66 @@ int file_transformation() {
         }
     }
 
-    if ( fclose (fp_1) == EOF) printf ("ошибка\n");
-    else printf ("выполнено\n");
+    if ( fclose (fp_1) == EOF || fclose (fp_2) == EOF)
+        return FILE_CLOSING_ERROR;
 
-    if ( fclose (fp_2) == EOF) printf ("ошибка\n");
-    else printf ("выполнено\n");
-
-    return 1;
+    return SUCCESS;
 }
 
-int main (void)
-{
-    char flag[1024] = "";
+int is_check_correct_number_arguments(int argc, int correct_number_arguments) {
+    if (argc != correct_number_arguments) return INCORRECT_NUMBER_ARGUMENTS_INPUT;
+    return  0;
+}
 
-    while(!((flag[0] == '/' || flag[0] == '-') && (flag[1] == 'r' || flag[1] == 'a'))) {
-        printf("%s\n", flag);
-        printf("Введите флаг: ");
-        scanf("%s", flag);
+int main (int argc, char *argv[]) {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
+    if (!(argc > 3 && argc < 6)) {
+        printf("%s\n", errorMessages[INCORRECT_NUMBER_ARGUMENTS_INPUT]);
+        return INCORRECT_NUMBER_ARGUMENTS_INPUT;
     }
 
+    char *result = NULL;
+    int code_expected_error;
 
-    if((flag[0] == '/' || flag[0] == '-') && flag[1] == 'r') {
-        file_concatenation();
-    } else if ((flag[0] == '/' || flag[0] == '-') && flag[1] == 'a') {
-        file_transformation();
+    if (argv[1][1] == 'r' && strchr("-/", argv[1][0]) != NULL) {
+
+        if(is_check_correct_number_arguments(argc, 5) == INCORRECT_NUMBER_ARGUMENTS_INPUT){
+            printf("%s\n", errorMessages[INCORRECT_NUMBER_ARGUMENTS_INPUT]);
+            return INCORRECT_NUMBER_ARGUMENTS_INPUT;
+        }
+
+        code_expected_error = file_concatenation(argv[2], argv[3], argv[4]);
+
+    } else if (argv[1][1] == 'a' && strchr("-/", argv[1][0]) != NULL) {
+
+        if(is_check_correct_number_arguments(argc, 4) == INCORRECT_NUMBER_ARGUMENTS_INPUT) {
+            printf("%s\n", errorMessages[INCORRECT_NUMBER_ARGUMENTS_INPUT]);
+            return INCORRECT_NUMBER_ARGUMENTS_INPUT;
+        }
+
+        code_expected_error = file_transformation(argv[2], argv[3]);
+
+    } else {
+        printf("%s", errorMessages[INCORRECT_FLAG_INPUT]);
+        return INCORRECT_FLAG_INPUT;
     }
 
-    return 0;
+    if(code_expected_error == FILE_OPENING_ERROR) {
+        printf("%s", errorMessages[FILE_OPENING_ERROR]);
+        return FILE_OPENING_ERROR;
+    } else if(code_expected_error == FILE_WRITING_ERROR) {
+        printf("%s", errorMessages[FILE_WRITING_ERROR]);
+        return FILE_WRITING_ERROR;
+    } else if(code_expected_error == FILE_CLOSING_ERROR) {
+        printf("%s", errorMessages[FILE_CLOSING_ERROR]);
+        return FILE_CLOSING_ERROR;
+    } else if(code_expected_error == FILE_READING_ERROR) {
+        printf("%s", errorMessages[FILE_READING_ERROR]);
+        return FILE_READING_ERROR;
+    }
+
+    free(result);
+    return SUCCESS;
 }
