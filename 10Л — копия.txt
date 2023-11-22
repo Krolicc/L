@@ -1,8 +1,25 @@
-#include <stdio.h>
+#include <stdio.h> 
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include <Windows.h>
+
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_NUMBER_INPUT,
+    INCORRECT_BASE_INPUT,
+    MEMORY_ALLOCATION_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректный ввод числа, попробуйте ещё раз",
+        "Некорректный ввод основания, попробуйте ещё раз",
+        "Ошибка выделения памяти",
+        "Неизвестная ошибка, что-то пошло не так"
+};
 
 char* string_comparison(char* cur_num, char* new_num, int cur_num_length, int new_num_length) {
     if(cur_num_length == new_num_length) {
@@ -17,23 +34,29 @@ char* string_comparison(char* cur_num, char* new_num, int cur_num_length, int ne
     return cur_num;
 }
 
-char* transformation_from_decimal_to_otherBase(int base, int num, char *lang) {
+char* transformation_from_decimal_to_otherBase(int base, int num, const char *lang) {
     char extra_result[1025];
     int counter = 0;
     while(num != 0) {
         extra_result[counter] = lang[num % base];
 
-
         num /= base;
         counter++;
     }
 
-    char *result = malloc (sizeof (char) * counter);
+    char *result = (char*)malloc(sizeof(char) * counter);
 
-    // char result[counter];
+    if (result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
     for(int i = counter-1; i >= 0; --i) {
         result[counter-i-1] = extra_result[i];
     }
+
+    for(int i = counter; i <= strlen(result); ++i)
+        result[i] = '\0';
 
     return result;
 }
@@ -43,7 +66,7 @@ bool correctness_base_range(int *base) {
         return 1;
     }
 
-    return 0;
+    return SUCCESS;
 }
 
 int num_length_func(char *num) {
@@ -78,56 +101,67 @@ bool correctness_num(char *num, int *base, char *lang) {
         i++; j = 0;
     }
 
-    return 0;
+    return SUCCESS;
 }
 
 int exponentiation(int base, int indicator) {
-    int result=1;
+    int answer=1;
 
     if(indicator == 0) return 1;
 
     while(indicator > 0) {
-        result *= base;
+        answer *= base;
         --indicator;
     }
 
-    return result;
+    return answer;
 }
 
-int main()
-{
+int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
     int base_num_system, num_length, max_num_length, decimal_number = 0;
 
     char num[1024], max_num[1024], lang[36] = "0123456789";
+    char* result = NULL;
+
 
     for (int i = 10; i < 36; i++)
         lang[i] = i + 55;
 
-    printf("Введите основание в диапазоне [2..36] и список чисел; стоп-слово: Stop\n");
+    printf("Введите основание в диапазоне [2..36]\n");
     scanf("%d", &base_num_system);
 
-    while(correctness_base_range(&base_num_system)) {
-        printf("Неверный диапазон основания \n");
-        scanf("%d", &base_num_system);
+    if(correctness_base_range(&base_num_system)) {
+        printf("%s", errorMessages[INCORRECT_BASE_INPUT]);
+        return INCORRECT_BASE_INPUT;
     }
 
-    printf("Введите список чисел, соответствующие основанию:\n");
+    printf("Введите список чисел, соответствующие основанию (стоп-слово: Stop):\n");
 
     scanf("%s", max_num);
 
-    while(correctness_num(max_num, &base_num_system, lang)) {
+    while(correctness_num(max_num, &base_num_system, lang) && strcmp(max_num, "Stop") != 0) {
         printf("Неверное число \n");
         scanf("%s", max_num);
     }
 
+    if(strcmp(max_num, "Stop") == 0) {
+        free(result);
+        printf("%s", "Чисел, соответсующих основанию не было введено");
+        return SUCCESS;
+    }
+
     max_num_length = num_length_func(max_num), strcpy(num, max_num), num_length = max_num_length;
 
-    while(strcmp(num, "Stop") != 0) {
+    while(true) {
         strcpy(max_num, string_comparison(max_num, num, max_num_length, num_length));
         scanf("%s", num);
+        if(strcmp(num, "Stop") == 0) break;
         while(correctness_num(num, &base_num_system, lang)) {
             printf("Неверное число \n");
-            scanf("%s", max_num);
+            scanf("%s", num);
         }
 
         int max_num_length = num_length_func(max_num);
@@ -145,10 +179,12 @@ int main()
     }
 
     printf("Число в 10-ной системе: %d \n", decimal_number);
+
     printf("Число в 9-ной системе: %s \n", transformation_from_decimal_to_otherBase(9, decimal_number, lang));
     printf("Число в 18-ной системе: %s \n", transformation_from_decimal_to_otherBase(18, decimal_number, lang));
     printf("Число в 27-ной системе: %s \n", transformation_from_decimal_to_otherBase(27, decimal_number, lang));
     printf("Число в 36-ной системе: %s \n", transformation_from_decimal_to_otherBase(36, decimal_number, lang));
 
-    return 0;
+    free(result);
+    return SUCCESS;
 }
